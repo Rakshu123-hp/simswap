@@ -1,79 +1,100 @@
-# SIM Swap Detection & Prevention (50% Build)
+# SecurBank Fraud Analytics System
 
-This is a **mid-project implementation** of the system described in `SAMM.pdf`.
-It is intentionally scoped to about 50% completion so you can demonstrate progress.
+A production-ready microservice and live dashboard designed to detect and prevent **SIM Swap Fraud** in real-time. This system uses a hybrid Risk Engine (Machine Learning + Heuristic Rules) to evaluate transactions, combined with a secure "Step-Up" OTP flow to intercept threats without locking out legitimate customers.
 
-## What is implemented
+## 🚀 Features
 
-- Flask backend service
-- Synthetic-data ML model (Logistic Regression) for fraud probability
-- Rule + ML hybrid risk scoring engine
-- Decision outcomes:
-  - `ALLOW` (low risk)
-  - `STEP_UP` (medium risk, needs extra verification)
-  - `BLOCK` (high risk)
-- Alert payload generation for suspicious events
-- REST APIs to:
-  - Evaluate login/transaction risk
-  - Evaluate SIM swap request risk
-- Quick local guide to run and show the prototype
+*   **Hybrid Risk Engine:** Evaluates transactions based on new device fingerprints, location mismatches, and time since last SIM swap.
+*   **Live Analyst Dashboard:** A modern, auto-refreshing UI for bank employees to monitor live threats and take action.
+*   **Step-Up Verification (OTP):** Automatically halts suspicious transactions and sends a 6-digit OTP to the user's registered phone number to confirm identity.
+*   **Telecom Webhook Integration:** Dedicated REST endpoint for ingesting live alerts directly from telecom providers.
+*   **SQLite Ledger:** Full relational database for tracking users, transactions, and secure OTP tokens.
 
-## What is intentionally pending (next 50%)
+---
 
-- Real database integration (currently in-memory/demo mode)
-- Real telecom/bank data pipeline
-- User account management + authentication
-- Real SMS/Email gateway integration
-- Frontend dashboard
-- Continuous model retraining with production data
+## 🛠️ Step-by-Step Setup Guide
 
-## Project structure
+Follow these instructions to run the project from scratch on your local machine.
 
-- `app.py` - Flask API entry point
-- `risk_engine.py` - Rule + ML scoring logic
-- `train_model.py` - Synthetic-data model trainer/loader
-- `requirements.txt` - Python dependencies
+### Prerequisites
+*   Python 3.10 or higher installed.
+*   Git (optional, to clone the repository).
 
-## Setup
+### Step 1: Extract / Clone the Project
+Unzip the project files into a folder, or clone the repository to your local machine. Open your terminal or command prompt and navigate (`cd`) into the project folder.
 
+### Step 2: Create a Virtual Environment
+It is highly recommended to isolate the project dependencies.
 ```bash
+# Windows
 python -m venv .venv
-.venv\Scripts\activate
+.\.venv\Scripts\activate
+
+# macOS / Linux
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+Install all required libraries, including Flask, SQLAlchemy, Scikit-Learn, and others.
+```bash
 pip install -r requirements.txt
+```
+
+### Step 4: Configure Environment Variables
+Create a file named `.env` in the root folder of the project. Add the following line to it:
+```ini
+MY_PHONE_NUMBER=+1234567890
+```
+*(You can put your real phone number here, but ensure it includes the country code, e.g., +91 for India, +1 for US).*
+
+### Step 5: Start the Backend Server
+Run the Flask application. This will automatically create the `instance/sim_swap.db` database and train the machine learning model on the first startup.
+```bash
 python app.py
 ```
+*The server will start running at `http://127.0.0.1:5000`.*
 
-Server starts at: `http://127.0.0.1:5000`
-
-## Demo API calls
-
-### 1) Health check
-
+### Step 6: Start the Live Traffic Simulator
+To see the dashboard light up with real data, open a **second terminal window**, activate your virtual environment again, and run the simulator:
 ```bash
-curl http://127.0.0.1:5000/health
+# Windows
+.\.venv\Scripts\activate
+python traffic_simulator.py
+
+# macOS / Linux
+source .venv/bin/activate
+python traffic_simulator.py
 ```
 
-### 2) SIM swap risk evaluation
+### Step 7: View the Dashboard
+1. Open your web browser and go to: `http://127.0.0.1:5000/dashboard`
+2. You will see the beautiful glassmorphism login screen.
+3. Click **"SECURE LOGIN"** (Any username/password works for this presentation demo).
+4. Watch the live transactions roll in!
 
+---
+
+## 🐳 Docker Setup (Alternative)
+
+If you have Docker installed, running the project is even easier! You don't need to install Python or set up a virtual environment.
+
+1. Ensure Docker Desktop is running.
+2. In your terminal, run:
 ```bash
-curl -X POST http://127.0.0.1:5000/api/sim-swap/request ^
-  -H "Content-Type: application/json" ^
-  -d "{\"user_id\":\"U1001\",\"sim_swap_count_30d\":2,\"hours_since_sim_change\":1,\"new_device\":true,\"location_mismatch\":true,\"failed_logins_24h\":5,\"transaction_amount\":75000}"
+docker-compose up --build
 ```
+3. Open `http://127.0.0.1:5000/dashboard` in your browser.
 
-### 3) Login/transaction event evaluation
+---
 
-```bash
-curl -X POST http://127.0.0.1:5000/api/risk/evaluate ^
-  -H "Content-Type: application/json" ^
-  -d "{\"user_id\":\"U1002\",\"sim_swap_count_30d\":0,\"hours_since_sim_change\":120,\"new_device\":false,\"location_mismatch\":false,\"failed_logins_24h\":0,\"transaction_amount\":2000}"
-```
+## 🧪 How to Demo the "Step-Up" OTP Flow
 
-## Guide-ready talking points
-
-Use these to present your 50% progress:
-
-1. We implemented core fraud detection logic using ML + behavior rules.
-2. We can classify requests in real time into allow/step-up/block.
-3. We added prevention hooks (blocking and alert payloads).
-4. Next, we will integrate live banking/telecom systems and a dashboard UI.
+1. Leave the **Traffic Simulator** running in the background.
+2. Look at the dashboard's **Recent Alerts** table on the left side.
+3. Wait for a transaction to get flagged as **STEP_UP** (Yellow Badge).
+4. The system will simulate sending an SMS. Read the end of the alert message on your screen: e.g., `(Sent OTP: 582910)`.
+5. Click the floating blue **"📱 Simulate Customer OTP"** button in the bottom right corner of the dashboard.
+6. Enter the **User ID** exactly as it appears in the table (e.g., `U-4912`).
+7. Enter the **6-Digit OTP** you just read from the alert.
+8. Click **Submit**. The dashboard will instantly update, and the locked transaction will turn green (`ALLOW`)!
