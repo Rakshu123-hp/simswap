@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  fraud-engine:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+    volumes:
+      - ./sim_swap.db:/app/sim_swap.db
+      - ./model.pkl:/app/model.pkl
+    restart: unless-stopped

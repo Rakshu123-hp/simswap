@@ -1,0 +1,57 @@
+# "Real" Production System Implementation Plan
+
+To upgrade this project from a prototype/demo to a system that looks and functions like a real, deployed enterprise application, we need to implement the final 50% of the architecture. 
+
+This plan will replace simulated stubs with real-world integrations, actual customer ledgers, and deployment-ready configurations.
+
+## User Review Required
+
+> [!IMPORTANT]
+> Because we are adding real SMS integrations, I will use the **Twilio API**. You will need to create a free Twilio account to get an API Key if you want the SMS messages to actually arrive on your phone. I will provide a `.env` file where you can paste your keys. If you don't provide keys, the code will still gracefully fall back to logging.
+
+## Open Questions
+
+1. **Docker**: I plan to add a `Dockerfile` and `docker-compose.yml`. Does your guide expect you to show that the project can be deployed via Docker?
+2. **Database**: We are currently using SQLite. For a "real" application, I can easily upgrade this to PostgreSQL (via docker-compose) or keep it as SQLite for ease of local testing. Do you want to switch to PostgreSQL?
+
+## Proposed Changes
+
+### 1. Customer & Ledger Database Models
+*We cannot just use random `user_id` strings anymore. We need real customers with phone numbers to send SMS alerts.*
+#### [MODIFY] `models.py`
+- Add `Customer` table (id, name, phone_number, account_balance).
+- Add `OTPVerification` table (to temporarily store OTP codes when a transaction requires "STEP_UP" verification).
+
+### 2. External SMS Integration (Twilio)
+*Instead of just printing "Sending Alert...", we will integrate the actual Twilio SDK.*
+#### [NEW] `.env` & `config.py`
+- Setup environment variables for `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER`.
+#### [MODIFY] `requirements.txt`
+- Add `twilio` and `python-dotenv`.
+#### [NEW] `sms_service.py`
+- A dedicated service class that connects to Twilio and sends real text messages to the `Customer`'s phone number.
+
+### 3. Step-Up Verification Flow (OTP)
+*When the Risk Engine returns `STEP_UP`, we need to actually do the step-up verification.*
+#### [MODIFY] `app.py`
+- **When Risk = STEP_UP**: The engine will generate a 6-digit OTP, save it to the database, and use `sms_service.py` to text it to the customer.
+- **New Endpoint**: `/api/customer/verify-otp` where the frontend/client submits the OTP. If correct, the transaction is marked as `ALLOW` and processed.
+
+### 4. Real Telecom Webhook Endpoint
+*Currently, we use a simulation script to hit `/api/sim-swap/request`. In reality, telecoms send a specific webhook format.*
+#### [NEW] Endpoint `/api/telecom/webhook`
+- A secure endpoint that validates a secret signature (to prove it actually came from Vodafone/AT&T) and registers the SIM swap event directly into the database.
+
+### 5. Production Containerization
+*Real systems are deployed via containers.*
+#### [NEW] `Dockerfile`
+- Python 3.11 slim image setup.
+#### [NEW] `docker-compose.yml`
+- Setup the Flask web service and (optionally) a PostgreSQL database.
+
+## Verification Plan
+
+1. **Database**: We will seed the database with a test `Customer` who has your actual phone number.
+2. **Transaction**: We will attempt a high-risk transaction.
+3. **SMS Delivery**: You should receive a real SMS on your phone saying: *"URGENT: Suspicious transaction detected. Your OTP is 492811."*
+4. **OTP Verification**: We will hit the `/api/customer/verify-otp` endpoint to prove the transaction is unblocked.
