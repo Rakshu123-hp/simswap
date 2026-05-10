@@ -7,13 +7,14 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
     <!-- Login Overlay -->
-    <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1e23; display: flex; justify-content: center; align-items: center; z-index: 1000;">
-        <div class="card" style="width: 400px; padding: 40px; text-align: center; background: #2c313c; color: white;">
-            <h2 style="margin-bottom: 30px;">SecurBank Fraud Portal</h2>
-            <input type="text" id="username" placeholder="Employee ID / Username" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background: #1a1e23; color: white; box-sizing: border-box;">
-            <input type="password" id="password" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #444; background: #1a1e23; color: white; box-sizing: border-box;">
-            <button id="loginBtn" style="width: 100%; padding: 12px; background: var(--primary); font-weight: bold;">SECURE LOGIN</button>
-            <p id="authMessage" style="color: var(--danger); margin-top: 15px; font-size: 14px;"></p>
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">🛡️</div>
+            <h2 class="login-title">SecurBank Fraud Portal</h2>
+            <input type="text" id="username" class="login-input" placeholder="Employee ID / Username">
+            <input type="password" id="password" class="login-input" placeholder="Password">
+            <button id="loginBtn" class="login-btn">SECURE LOGIN</button>
+            <p id="authMessage" style="color: #ff6b6b; margin-top: 15px; font-size: 14px; font-weight: 500;"></p>
         </div>
     </div>
 
